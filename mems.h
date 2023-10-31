@@ -78,8 +78,13 @@ Parameter: The size of the memory the user program wants
 Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 void* mems_malloc(size_t size){
-
-    size_t allocation_size = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
+    if(size%PAGE_SIZE==0){
+        size_t allocation_size = size;
+    }
+    else{
+        size_t allocation_size = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
+    }
+    
 
     // Traverse the free list and find a suitable segment to allocate
     Node* currentNode = free_list_head->next;
