@@ -38,6 +38,7 @@ typedef struct Chain {
 } Chain;
 
 Chain* free_list_head;
+int firstTime;
 
 /*
 Initializes all the required parameters for the MeMS system. The main parameters to be initialized are:
@@ -50,10 +51,10 @@ Returns: Nothing
 void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
+    firstTime=1;
  
 }
 
-int firstTime=1;
 /*
 This function will be called at the end of the MeMS system and its main job is to unmap the 
 allocated memory using the munmap system call.
