@@ -117,7 +117,7 @@ void* mems_malloc(size_t size){
             if (currentChain->type == 0 && currentChaun->size >= allocation_size) {
                 if (currentChain->size > allocation_size) {
                     Node* newSpace= (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-                    newSpace->size = currentSegment->size - allocation_size;
+                    newSpace->size = currentChain->size - allocation_size;
                     newSpace->type = 0;
                     newSpace->prev = currentChain;
                     newSpace->next = currentChain->next;
@@ -178,7 +178,7 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 */
 void *mems_get(void*v_ptr){
-    return void* v_ptr;
+    
 }
 
 
