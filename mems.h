@@ -34,6 +34,7 @@ typedef struct Chain {
     struct Node* sub_chain;
     struct Chain* next;
     struct Chain* prev;
+    size_t size;
 } Chain;
 
 Chain* free_list_head;
@@ -101,7 +102,9 @@ void* mems_malloc(size_t size){
         newChain->sub_chain=newProcessNode;
         newChain->next=NULL;
         newChain->prev=NULL;
+        newChain->size=allocationSize;
         firstTime=0;
+        return newChain->offset;
     }
     size_t virtualAddress=0;
     Node* currentNode = free_list_head;
@@ -132,8 +135,9 @@ void* mems_malloc(size_t size){
         }
         currentNode = currentNode->next;
     }
-
-    // If no suitable segment is found, request memory from the OS using mmap
+    while(currentNode->next!=NULL){
+        currentNode=currentNode->next;
+    }
     Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     Node* newProcessNode=tempNode;
     Node* newHoleNode=(char*) tempNode +sizeof(Node)+ size;
@@ -143,19 +147,13 @@ void* mems_malloc(size_t size){
     newHoleNode->size=allocation_size-size;
     newHoleNode->prev=newProcessNode;
     newHoleNode->next=NULL;
-    // tempNode->size = allocation_size;
-    // tempNode->type = 0;
-    // tempNode->prev = NULL;
-    // tempNode->next = NULL;
-    // Add the new segment to the free list
     Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    newChain->sub_chain = newNode;
-    newChain->prev = free_list_head->prev;
-    newChain->next = free_list_head;
-    free_list_head->prev->next = newNode;
-    free_list_head->prev = newNode;
-
-
+    newChain->sub_chain = newProcessNode;
+    newChain->prev = currentNode;
+    newChain->next = NULL;
+    newChain->offset=currentNode->size;
+    newChain->size=allocationSize;
+    return newChain->offset;
 }
 
 
