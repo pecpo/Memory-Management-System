@@ -110,8 +110,8 @@ void* mems_malloc(size_t size){
         Node* currentChain = currentNode->sub_chain;
         virtualAddress=currentNode->offset;
         while (currentChain != NULL) {
-            if (currentChain->type == 0 && currentSegment->size >= allocation_size) {
-                if (currentSegment->size > allocation_size) {
+            if (currentChain->type == 0 && currentChaun->size >= allocation_size) {
+                if (currentChain->size > allocation_size) {
                     Node* newSpace= (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
                     newSpace->size = currentSegment->size - allocation_size;
                     newSpace->type = 0;
@@ -119,10 +119,12 @@ void* mems_malloc(size_t size){
                     newSpace->next = currentChain->next;
                     currentChain->next = newSpace;
                     currentChain->size = allocation_size;
+                    return virtualAddress;
                 }
-                // Mark the segment as PROCESS
-                currentSegment->type = 1;
-                ;
+                else{
+                    currentChain->type = 1;
+                    return virtualAddress;
+                }
             }
             else{
                 virtualAddress+=currentChain->size;
