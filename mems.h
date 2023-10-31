@@ -1,12 +1,11 @@
-/*
-All the main functions with respect to the MeMS are inplemented here
-read the function discription for more details
+// All the main functions with respect to the MeMS are inplemented here
+// read the function discription for more details
 
-NOTE: DO NOT CHANGE THE NAME OR SIGNATURE OF FUNCTIONS ALREADY PROVIDED
-you are only allowed to implement the functions 
-you can also make additional helper functions a you wish
+// NOTE: DO NOT CHANGE THE NAME OR SIGNATURE OF FUNCTIONS ALREADY PROVIDED
+// you are only allowed to implement the functions 
+// you can also make additional helper functions a you wish
 
-REFER DOCUMENTATION FOR MORE DETAILS ON FUNSTIONS AND THEIR FUNCTIONALITY
+// REFER DOCUMENTATION FOR MORE DETAILS ON FUNSTIONS AND THEIR FUNCTIONALITY
 */
 // add other headers as required
 #include <unistd.h>
@@ -53,7 +52,6 @@ void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
     firstTime=1;
- 
 }
 
 /*
