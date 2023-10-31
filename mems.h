@@ -28,13 +28,16 @@ typedef struct Node {
     int type; // 0 for HOLE, 1 for PROCESS
     struct Node* next;
     struct Node* prev;
-} Segment;
+} Node;
 
 typedef struct Chain {
+    size_t offset;
     struct Node* sub_chain;
     struct Chain* next;
     struct Chain* prev;
-} Node;
+} Chain;
+
+Chain* free_list_head;
 
 /*
 Initializes all the required parameters for the MeMS system. The main parameters to be initialized are:
@@ -45,10 +48,12 @@ Input Parameter: Nothing
 Returns: Nothing
 */
 void mems_init(){
-
+    // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    free_list_head=NULL;
+ 
 }
 
-
+int firstTime=1;
 /*
 This function will be called at the end of the MeMS system and its main job is to unmap the 
 allocated memory using the munmap system call.
@@ -73,6 +78,79 @@ Parameter: The size of the memory the user program wants
 Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 void* mems_malloc(size_t size){
+
+    size_t allocation_size = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
+
+    // Traverse the free list and find a suitable segment to allocate
+    Node* currentNode = free_list_head->next;
+    while (currentNode != NULL) {
+        Segment* currentSegment = currentNode->sub_chain;
+        while (currentSegment != NULL) {
+            if (currentSegment->type == 0 && currentSegment->size >= allocation_size) {
+                // Found a suitable hole segment, allocate memory from it
+                if (currentSegment->size > allocation_size) {
+                    // Split the hole segment if there is remaining space
+                    Segment* newSegment = (Segment*)mmap(NULL, sizeof(Segment), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                    newSegment->size = currentSegment->size - allocation_size;
+                    newSegment->type = 0;
+                    newSegment->prev = currentSegment;
+                    newSegment->next = currentSegment->next;
+
+                    currentSegment->next = newSegment;
+                    currentSegment->size = allocation_size;
+                }
+                // Mark the segment as PROCESS
+                currentSegment->type = 1;
+                return mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            }
+            currentSegment = currentSegment->next;
+        }
+        currentNode = currentNode->next;
+    }
+
+
+    if(firstTime){
+        Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        Node* newProcessNode=tempNode;
+        Node* newHoleNode=(char*) tempNode +sizeof(Node)+ size;
+        newProcessNode->size=size;
+        newProcessNode->next=newHoleNode;
+        newProcessNode->prev=NULL;
+        newHoleNode->size=allocation_size-size;
+        newHoleNode->prev=newProcessNode;
+        newHoleNode->next=NULL;
+        Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        free_list_head=newChain;
+        newChain->offset=(size_t)newChain;
+        newChain->sub_chain=newProcessNode;
+        newChain->next=NULL;
+        newChain->prev=NULL;
+        firstTime=0;
+    }
+
+    // If no suitable segment is found, request memory from the OS using mmap
+    Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    Node* newProcessNode=tempNode;
+    Node* newHoleNode=(char*) tempNode +sizeof(Node)+ size;
+    newProcessNode->size=size;
+    newProcessNode->next=newHoleNode;
+    newProcessNode->prev=NULL;
+    newHoleNode->size=allocation_size-size;
+    newHoleNode->prev=newProcessNode;
+    newHoleNode->next=NULL;
+    // tempNode->size = allocation_size;
+    // tempNode->type = 0;
+    // tempNode->prev = NULL;
+    // tempNode->next = NULL;
+    // Add the new segment to the free list
+    Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    newChain->sub_chain = newNode;
+    newChain->prev = free_list_head->prev;
+    newChain->next = free_list_head;
+    free_list_head->prev->next = newNode;
+    free_list_head->prev = newNode;
+
+    return mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 }
 

@@ -1,7 +1,6 @@
 // include other header files as needed
 #include"mems.h"
 
-
 int main(int argc, char const *argv[])
 {
     // initialise the MeMS system 
