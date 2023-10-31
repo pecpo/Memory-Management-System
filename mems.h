@@ -107,15 +107,15 @@ void* mems_malloc(size_t size){
         return newChain->offset;
     }
     size_t virtualAddress=0;
-    Node* currentNode = free_list_head;
-    while (currentNode != NULL){
-        Node* currentChain = currentNode->sub_chain;
+    Chain* currentChain = free_list_head;
+    while (currentChain != NULL){
+        Node* currentNode = currentNode->sub_chain;
         virtualAddress=currentNode->offset;
-        while (currentChain != NULL) {
+        while (currentNode != NULL) {
             if (currentChain->type == 0 && currentChaun->size >= allocation_size) {
                 if (currentChain->size > allocation_size) {
-                    Node* newSpace= (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-                    newSpace->size = currentChain->size - allocation_size;
+                    Node* newSpace= (Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                    newSpace->size = currentSegment->size - allocation_size;
                     newSpace->type = 0;
                     newSpace->prev = currentChain;
                     newSpace->next = currentChain->next;
@@ -131,9 +131,9 @@ void* mems_malloc(size_t size){
             else{
                 virtualAddress+=currentChain->size;
             }
-            currentChain = currentChain->next;
+            currentNode = currentNode->next;
         }
-        currentNode = currentNode->next;
+        currentChain = currentChain->next;
     }
     while(currentNode->next!=NULL){
         currentNode=currentNode->next;
@@ -176,7 +176,7 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 */
 void *mems_get(void*v_ptr){
-    
+    return void* v_ptr;
 }
 
 
