@@ -1,2 +1,3 @@
 # os-ass-3
-To do everything nothing done as of yet
+To do everything nothing done as of yet.
+But we have to do it.
