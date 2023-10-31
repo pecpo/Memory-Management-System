@@ -78,42 +78,14 @@ Parameter: The size of the memory the user program wants
 Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 void* mems_malloc(size_t size){
+    size_t allocationSize=0;
     if(size%PAGE_SIZE==0){
-        size_t allocation_size = size;
+        allocationSize = size;
     }
     else{
-        size_t allocation_size = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
+        allocationSize = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
     }
-    
-
     // Traverse the free list and find a suitable segment to allocate
-    Node* currentNode = free_list_head->next;
-    while (currentNode != NULL) {
-        Segment* currentSegment = currentNode->sub_chain;
-        while (currentSegment != NULL) {
-            if (currentSegment->type == 0 && currentSegment->size >= allocation_size) {
-                // Found a suitable hole segment, allocate memory from it
-                if (currentSegment->size > allocation_size) {
-                    // Split the hole segment if there is remaining space
-                    Segment* newSegment = (Segment*)mmap(NULL, sizeof(Segment), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-                    newSegment->size = currentSegment->size - allocation_size;
-                    newSegment->type = 0;
-                    newSegment->prev = currentSegment;
-                    newSegment->next = currentSegment->next;
-
-                    currentSegment->next = newSegment;
-                    currentSegment->size = allocation_size;
-                }
-                // Mark the segment as PROCESS
-                currentSegment->type = 1;
-                return mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            }
-            currentSegment = currentSegment->next;
-        }
-        currentNode = currentNode->next;
-    }
-
-
     if(firstTime){
         Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         Node* newProcessNode=tempNode;
@@ -121,16 +93,43 @@ void* mems_malloc(size_t size){
         newProcessNode->size=size;
         newProcessNode->next=newHoleNode;
         newProcessNode->prev=NULL;
-        newHoleNode->size=allocation_size-size;
+        newHoleNode->size=allocationSize-size;
         newHoleNode->prev=newProcessNode;
         newHoleNode->next=NULL;
         Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         free_list_head=newChain;
-        newChain->offset=(size_t)newChain;
+        newChain->offset=0;
         newChain->sub_chain=newProcessNode;
         newChain->next=NULL;
         newChain->prev=NULL;
         firstTime=0;
+    }
+    size_t virtualAddress=0;
+    Node* currentNode = free_list_head;
+    while (currentNode != NULL){
+        Node* currentChain = currentNode->sub_chain;
+        virtualAddress=currentNode->offset;
+        while (currentChain != NULL) {
+            if (currentChain->type == 0 && currentSegment->size >= allocation_size) {
+                if (currentSegment->size > allocation_size) {
+                    Node* newSpace= (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                    newSpace->size = currentSegment->size - allocation_size;
+                    newSpace->type = 0;
+                    newSpace->prev = currentChain;
+                    newSpace->next = currentChain->next;
+                    currentChain->next = newSpace;
+                    currentChain->size = allocation_size;
+                }
+                // Mark the segment as PROCESS
+                currentSegment->type = 1;
+                ;
+            }
+            else{
+                virtualAddress+=currentChain->size;
+            }
+            currentChain = currentChain->next;
+        }
+        currentNode = currentNode->next;
     }
 
     // If no suitable segment is found, request memory from the OS using mmap
@@ -155,7 +154,6 @@ void* mems_malloc(size_t size){
     free_list_head->prev->next = newNode;
     free_list_head->prev = newNode;
 
-    return mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
 }
 
