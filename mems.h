@@ -114,7 +114,6 @@ void* mems_malloc(size_t size){
         while (currentNode != NULL) {
             if (currentChain->type == 0 && currentChaun->size >= allocation_size) {
                 if (currentChain->size > allocation_size) {
-                    Node* newSpace= (Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
                     newSpace->size = currentSegment->size - allocation_size;
                     newSpace->type = 0;
                     newSpace->prev = currentChain;
