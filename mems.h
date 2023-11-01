@@ -112,7 +112,7 @@ void* mems_malloc(size_t size){
         Node* currentNode = currentNode->sub_chain;
         virtualAddress=currentNode->offset;
         while (currentNode != NULL) {
-            if (currentChain->type == 0 && currentChaun->size >= allocation_size) {
+            if (currentChain->type == 0 && currentChain->size >= allocation_size) {
                 if (currentChain->size > allocation_size) {
                     newSpace->size = currentSegment->size - allocation_size;
                     newSpace->type = 0;

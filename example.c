@@ -1,8 +1,15 @@
 // include other header files as needed
 #include"mems.h"
-
+typedef struct Node {
+    size_t size;
+    int type; // 0 for HOLE, 1 for PROCESS
+    struct Node* next;
+    struct Node* prev;
+} Node;
 int main(int argc, char const *argv[])
 {
+    printf("%d ",sizeof(Node));
+    return;
     // initialise the MeMS system 
     mems_init();
     int* ptr[10];
