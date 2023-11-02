@@ -152,6 +152,7 @@ void* mems_malloc(size_t size){
     newChain->next = NULL;
     newChain->offset=currentNode->size;
     newChain->size=allocationSize;
+    currentNode->next=newChain;
     return newChain->offset;
 }
 
