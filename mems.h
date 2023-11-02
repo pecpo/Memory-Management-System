@@ -23,7 +23,8 @@ macro to make the output of all system same and conduct a fair evaluation.
 #define PAGE_SIZE 4096
 
 typedef struct Node {
-    size_t size;
+    void* start_addr;
+    void* end_addr;
     int type; // 0 for HOLE, 1 for PROCESS
     struct Node* next;
     struct Node* prev;
@@ -155,7 +156,7 @@ void* mems_malloc(size_t size){
     newChain->sub_chain = newProcessNode;
     newChain->prev = currentNode;
     newChain->next = NULL;
-    newChain->offset=currentNode->size;
+    newChain->offset=currentNode->size+currentNode->offset;
     newChain->size=allocationSize;
     currentNode->next=newChain;
     return newChain->offset;
@@ -195,14 +196,13 @@ void *mems_get(void*v_ptr){
         size_t node_size=CurrentNode->size;
         if(start_ptr>node_size){
             start_ptr=start_ptr-node_size;
-            CurrentNode=CurrentNode->next;
         }
         else{
             break;
         }
-        
+        CurrentNode=CurrentNode->next;
     }
-    return (void*)CurrentNode+a;
+    return (void*)CurrentNode+a; //TODO figure out return value and type
 }
 
 
