@@ -155,7 +155,7 @@ void* mems_malloc(size_t size){
     newChain->sub_chain = newProcessNode;
     newChain->prev = currentNode;
     newChain->next = NULL;
-    newChain->offset=currentNode->size;
+    newChain->offset=currentNode->size+currentNode->offset;
     newChain->size=allocationSize;
     currentNode->next=newChain;
     return newChain->offset;
@@ -187,6 +187,7 @@ void *mems_get(void*v_ptr){
         if(a<=CurrentChain->offset+CurrentChain->size){
             break;
         }
+        CurrentChain=CurrentChain->next;
     }
     a=a-CurrentChain->offset;
     int b=0;
@@ -199,6 +200,7 @@ void *mems_get(void*v_ptr){
         else{
             break;
         }
+        CurrentNode=CurrentNode->next;
     }
     return (int)CurrentNode+a;
 }
