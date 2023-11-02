@@ -39,6 +39,7 @@ typedef struct Chain {
 } Chain;
 
 Node* internal_nodes_ptr;
+size_t internal_nodes_arr_size;
 Chain* internal_chains_ptr;
 Chain* free_list_head;
 int firstTime;
@@ -55,8 +56,9 @@ void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
     firstTime=1;
-    internal_chains_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     internal_nodes_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    internal_nodes_arr_size=PAGE_SIZE;
+    internal_chains_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 }
 
 /*
@@ -265,7 +267,19 @@ void mems_free(void *v_ptr){
     
 }
 
-Node* internal_(){
-    Node* internal_nodes_head=(Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    return internal_nodes_head;
-}
+//Unviable strat for creating nodes
+
+// Node* internal_node_create(){
+//     if(internal_nodes_ptr+sizeof(Node)<internal_nodes_arr_size){
+//         internal_nodes_ptr++;
+//     }
+//     else{
+//         Node* new_ptr=(Node*)mmap(NULL, internal_nodes_arr_size*2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+//         memcpy(new_ptr, internal_nodes_ptr, min(internal_nodes_arr_size, internal_nodes_arr_size*2));
+        
+//         munmap(internal_nodes_ptr,internal_nodes_arr_size);
+//         internal_nodes_ptr=new_ptr;
+//         internal_nodes_arr_size*=2;
+
+//     }
+// }
