@@ -200,7 +200,7 @@ void *mems_get(void*v_ptr){
             break;
         }
     }
-    return a;
+    return (int)CurrentNode+a;
 }
 
 
