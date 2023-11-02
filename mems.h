@@ -219,7 +219,7 @@ void mems_free(void *v_ptr){
     
 }
 
-Node* internal_node_initialiser(){
+Node* internal_(){
     Node* internal_nodes_head=(Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     return internal_nodes_head;
 }
