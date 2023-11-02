@@ -181,7 +181,26 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 */
 void *mems_get(void*v_ptr){
-    return void* v_ptr;
+    int a=(int)v_ptr;
+    Chain* CurrentChain=free_list_head;
+    while(CurrentChain!=NULL){
+        if(a<=CurrentChain->offset+CurrentChain->size){
+            break;
+        }
+    }
+    a=a-CurrentChain->offset;
+    int b=0;
+    Node* CurrentNode=CurrentChain->sub_chain;
+    while(CurrentNode!=NULL){
+        b=CurrentNode->size;
+        if(a>b){
+            a=a-b;
+        }
+        else{
+            break;
+        }
+    }
+    return a;
 }
 
 
