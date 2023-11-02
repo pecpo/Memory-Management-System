@@ -61,7 +61,12 @@ Input Parameter: Nothing
 Returns: Nothing
 */
 void mems_finish(){
-    
+    Chain* CurrentChain=free_list_head;
+    while(CurrentChain!=NULL){
+        if(munmap(CurrentChain,CurrentChain->size)==-1){
+            perror("munmap");
+        }
+    }
 }
 
 
