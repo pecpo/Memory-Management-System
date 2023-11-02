@@ -171,7 +171,53 @@ Parameter: Nothing
 Returns: Nothing but should print the necessary information on STDOUT
 */
 void mems_print_stats(){
-
+    Chain* currentChain=free_list_head;
+    size_t hole_memory=0;
+    int pages_used=0;
+    int main_length=0;
+    while(currentChain!=NULL){
+        printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
+        Node* currentNode=currentChain->sub_chain;
+        size_t start_ptr=currentChain->offset;
+        pages_used=pages_used+(currentChain->size/PAGE_SIZE);
+        while(currentNode!=NULL){
+            if(currentNode->type==0){
+                printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
+                start_ptr=start_ptr+currentNode->size;
+            }
+            else if(currentNode->type==1){
+                printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
+                start_ptr=start_ptr+currentNode->size;
+                hole_memory=hole_memory+currentNode->size;
+            }
+            currentNode=currentNode->next;
+        }
+        printf("NULL");
+        printf("\n");
+        currentNode=currentNode->next;
+        main_length++;
+    }
+    int sub_chain[main_length];
+    int i=0;
+    currentChain=free_list_head;
+    while(currentChain!=NULL){
+        Node* currentNode=currentChain->sub_chain;
+        int sub_chain_length=0;
+        while (currentNode!=NULL){
+            sub_chain_length++;
+        }
+        sub_chain[i]=sub_chain_length;
+        i++;
+        currentChain=currentChain->next;
+    }
+    printf("Used Pages:%d\n",pages_used);
+    printf("Unused memory:%zu\n",hole_memory);
+    printf("Main Chain Length:%d\n",main_length);
+    printf("Sub-chain length array:[")
+    for(i=0;i<main_length;i++){
+        printf("%d,",sub_chain[i]);
+    }
+    printf("]");
 }
 
 
