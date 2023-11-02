@@ -23,20 +23,23 @@ macro to make the output of all system same and conduct a fair evaluation.
 #define PAGE_SIZE 4096
 
 typedef struct Node {
-    size_t size;
     int type; // 0 for HOLE, 1 for PROCESS
+    void* start_addr;
+    void* end_addr;
     struct Node* next;
     struct Node* prev;
 } Node;
 
 typedef struct Chain {
+    int page_num; // Number of pages, also denotes total memory in that subchain
     size_t offset;
     struct Node* sub_chain;
     struct Chain* next;
     struct Chain* prev;
-    size_t size;
 } Chain;
 
+Node* internal_nodes_ptr;
+Chain* internal_chains_ptr;
 Chain* free_list_head;
 int firstTime;
 
@@ -52,6 +55,8 @@ void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
     firstTime=1;
+    internal_chains_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    internal_nodes_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 }
 
 /*
@@ -227,28 +232,27 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 */
 void *mems_get(void*v_ptr){
-    int a=(size_t)v_ptr;
+    
     Chain* CurrentChain=free_list_head;
     while(CurrentChain!=NULL){
-        if(a<=CurrentChain->offset+CurrentChain->size){
+        if((size_t)v_ptr<=CurrentChain->offset+CurrentChain->size){
             break;
         }
         CurrentChain=CurrentChain->next;
     }
-    a=a-CurrentChain->offset;
-    int b=0;
+    size_t start_ptr=(size_t)v_ptr-CurrentChain->offset;
     Node* CurrentNode=CurrentChain->sub_chain;
     while(CurrentNode!=NULL){
-        b=CurrentNode->size;
-        if(a>b){
-            a=a-b;
+        size_t node_size=CurrentNode->size;
+        if(start_ptr>node_size){
+            start_ptr=start_ptr-node_size;
         }
         else{
             break;
         }
         CurrentNode=CurrentNode->next;
     }
-    return (int)CurrentNode+a;
+    return (void*)CurrentNode+a; //TODO figure out return value and type
 }
 
 
@@ -259,4 +263,9 @@ Returns: nothing
 */
 void mems_free(void *v_ptr){
     
+}
+
+Node* internal_node_initialiser(){
+    Node* internal_nodes_head=(Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return internal_nodes_head;
 }
