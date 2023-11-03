@@ -107,23 +107,38 @@ void* mems_malloc(size_t size){
         newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
         newProcessNode->type=1;
-        Node* newHoleNode=internal_node_create();
-        newHoleNode->start_addr=newProcessNode->end_addr+1;
-        newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
-        newHoleNode->type=0;
-        newProcessNode->next=newHoleNode;
-        newProcessNode->prev=NULL;
-        newHoleNode->next=NULL;
-        newHoleNode->prev=newProcessNode;
-        Chain* newChain=internal_chain_create();
-        free_list_head=newChain;
-        newChain->offset=1000;
-        newChain->sub_chain=newProcessNode;
-        newChain->next=NULL;
-        newChain->prev=NULL;
-        newChain->size=allocationSize;
-        firstTime=0;
-        return (void*)newChain->offset;
+        if(size==allocationSize){
+            newProcessNode->next=NULL;
+            newProcessNode->prev=NULL;
+            Chain* newChain=internal_chain_create();
+            free_list_head=newChain;
+            newChain->offset=1000;
+            newChain->sub_chain=newProcessNode;
+            newChain->next=NULL;
+            newChain->prev=NULL;
+            newChain->size=allocationSize-1;
+            firstTime=0;
+            return (void*)newChain->offset;
+        }
+        else{
+            Node* newHoleNode=internal_node_create();
+            newHoleNode->start_addr=newProcessNode->end_addr+1;
+            newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
+            newHoleNode->type=0;
+            newProcessNode->next=newHoleNode;
+            newProcessNode->prev=NULL;
+            newHoleNode->next=NULL;
+            newHoleNode->prev=newProcessNode;
+            Chain* newChain=internal_chain_create();
+            free_list_head=newChain;
+            newChain->offset=1000;
+            newChain->sub_chain=newProcessNode;
+            newChain->next=NULL;
+            newChain->prev=NULL;
+            newChain->size=allocationSize-1;
+            firstTime=0;
+            return (void*)newChain->offset;
+        }
 
         // Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         // Node* newProcessNode=tempNode;
@@ -181,22 +196,29 @@ void* mems_malloc(size_t size){
     currentChain->next=newChain;
     newChain->prev=currentChain;
     newChain->next=NULL;
-    newChain->size=allocationSize;
+    newChain->size=allocationSize-1;
     newChain->offset=currentChain->offset+currentChain->size;
     Node* newProcessNode=internal_node_create();
     newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
     newProcessNode->type=1;
-    Node* newHoleNode=internal_node_create();
-    newHoleNode->start_addr=newProcessNode->end_addr+1;
-    newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
-    newHoleNode->type=0;
-    newProcessNode->next=newHoleNode;
-    newProcessNode->prev=NULL;
-    newHoleNode->next=NULL;
-    newHoleNode->prev=newProcessNode;
     newChain->sub_chain=newProcessNode;
-    return (void*)newChain->offset;
+    if(size==allocationSize){
+        newProcessNode->next=NULL;
+        newProcessNode->prev=NULL;
+        return (void*)newChain->offset;
+    }
+    else{
+        Node* newHoleNode=internal_node_create();
+        newHoleNode->start_addr=newProcessNode->end_addr+1;
+        newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
+        newHoleNode->type=0;
+        newProcessNode->next=newHoleNode;
+        newProcessNode->prev=NULL;
+        newHoleNode->next=NULL;
+        newHoleNode->prev=newProcessNode;
+        return (void*)newChain->offset;
+    }
 
 
     // Node* newProcessNode=tempNode;
@@ -227,52 +249,52 @@ Parameter: Nothing
 Returns: Nothing but should print the necessary information on STDOUT
 */
 void mems_print_stats(){
-    // Chain* currentChain=free_list_head;
-    // size_t hole_memory=0;
-    // int pages_used=0;
-    // int main_length=0;
-    // while(currentChain!=NULL){
-    //     printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
-    //     Node* currentNode=currentChain->sub_chain;
-    //     size_t start_ptr=currentChain->offset;
-    //     pages_used=pages_used+(currentChain->size/PAGE_SIZE);
-    //     while(currentNode!=NULL){
-    //         if(currentNode->type==0){
-    //             printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
-    //             start_ptr=start_ptr+currentNode->size;
-    //         }
-    //         else if(currentNode->type==1){
-    //             printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
-    //             start_ptr=start_ptr+currentNode->size;
-    //             hole_memory=hole_memory+currentNode->size;
-    //         }
-    //         currentNode=currentNode->next;
-    //     }
-    //     printf("NULL");
-    //     printf("\n");
-    //     currentNode=currentNode->next;
-    //     main_length++;
-    // }
-    // int sub_chain[main_length];
-    // int i=0;
-    // currentChain=free_list_head;
-    // while(currentChain!=NULL){
-    //     Node* currentNode=currentChain->sub_chain;
-    //     int sub_chain_length=0;
-    //     while (currentNode!=NULL){
-    //         sub_chain_length++;
-    //     }
-    //     sub_chain[i]=sub_chain_length;
-    //     i++;
-    //     currentChain=currentChain->next;
-    // }
-    // printf("Used Pages:%d\n",pages_used);
-    // printf("Unused memory:%zu\n",hole_memory);
-    // printf("Main Chain Length:%d\n",main_length);
-    // printf("Sub-chain length array:[")
-    // for(i=0;i<main_length;i++){
-    //     printf("%d,",sub_chain[i]);
-    // }
+    Chain* currentChain=free_list_head;
+    size_t hole_memory=0;
+    int pages_used=0;
+    int main_length=0;
+    do{
+        printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
+        Node* currentNode=currentChain->sub_chain;
+        size_t start_ptr=currentChain->offset;
+        pages_used=pages_used+(currentChain->size/PAGE_SIZE);
+        while(currentNode!=NULL){
+            if(currentNode->type==1){
+                printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
+                start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr);
+            }
+            else if(currentNode->type==0){
+                printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
+                start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr);
+                hole_memory=hole_memory+(currentNode->end_addr-currentNode->start_addr);
+            }
+            currentNode=currentNode->next;
+        }
+        printf("NULL");
+        printf("\n");
+        currentChain=currentChain->next;
+        main_length++;
+    }while (currentChain->next!=NULL);
+    int sub_chain[main_length];
+    int i=0;
+    currentChain=free_list_head;
+    while(currentChain!=NULL){
+        Node* currentNode=currentChain->sub_chain;
+        int sub_chain_length=0;
+        while (currentNode!=NULL){
+            sub_chain_length++;
+        }
+        sub_chain[i]=sub_chain_length;
+        i++;
+        currentChain=currentChain->next;
+    }
+    printf("Used Pages:%d\n",pages_used);
+    printf("Unused memory:%zu\n",hole_memory);
+    printf("Main Chain Length:%d\n",main_length);
+    printf("Sub-chain length array:[");
+    for(i=0;i<main_length;i++){
+        printf("%d,",sub_chain[i]);
+    }
     printf("]");
 }
 
