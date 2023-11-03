@@ -163,33 +163,34 @@ void* mems_malloc(size_t size){
         // firstTime=0;
         // return newChain->offset;
     }
-    // size_t virtualAddress=0;
-    // while (currentChain != NULL){
-    //     Node* currentNode = currentNode->sub_chain;
-    //     virtualAddress=currentNode->offset;
-    //     while (currentNode != NULL) {
-    //         if (currentChain->type == 0 && currentChain->size >= allocation_size) {
-    //             if (currentChain->size > allocation_size) {
-    //                 newSpace->size = currentSegment->size - allocation_size;
-    //                 newSpace->type = 0;
-    //                 newSpace->prev = currentChain;
-    //                 newSpace->next = currentChain->next;
-    //                 currentChain->next = newSpace;
-    //                 currentChain->size = allocation_size;
-    //                 return virtualAddress;
-    //             }
-    //             else{
-    //                 currentChain->type = 1;
-    //                 return virtualAddress;
-    //             }
-    //         }
-    //         else{
-    //             virtualAddress+=currentChain->size;
-    //         }
-    //         currentNode = currentNode->next;
-    //     }
-    //     currentChain = currentChain->next;
-    // }
+    
+    size_t virtualAddress=0;
+    while (currentChain != NULL){
+        Node* currentNode = currentNode->sub_chain;
+        virtualAddress=currentNode->offset;
+        while (currentNode != NULL) {
+            if (currentChain->type == 0 && currentChain->size >= allocation_size) {
+                if (currentChain->size > allocation_size) {
+                    newSpace->size = currentSegment->size - allocation_size;
+                    newSpace->type = 0;
+                    newSpace->prev = currentChain;
+                    newSpace->next = currentChain->next;
+                    currentChain->next = newSpace;
+                    currentChain->size = allocation_size;
+                    return virtualAddress;
+                }
+                else{
+                    currentChain->type = 1;
+                    return virtualAddress;
+                }
+            }
+            else{
+                virtualAddress+=currentChain->size;
+            }
+            currentNode = currentNode->next;
+        }
+        currentChain = currentChain->next;
+    }
 
     // Did not find an empty space, creating new subchain
     Chain* currentChain = free_list_head;
