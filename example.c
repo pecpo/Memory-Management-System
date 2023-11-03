@@ -12,8 +12,8 @@ int main(int argc, char const *argv[])
     This allocates 10 arrays of 250 integers each
     */
     printf("\n------- Allocated virtual addresses [mems_malloc] -------\n");
-    for(int i=0;i<1000;i++){
-        ptr[i] = (int*)mems_malloc(sizeof(int)*1024);
+    for(int i=0;i<5;i++){
+        ptr[i] = (int*)mems_malloc(sizeof(int)*250);
         printf("Virtual address: %lu\n", (unsigned long)ptr[i]);
     }
 
