@@ -30,7 +30,7 @@ typedef struct Node {
 } Node;
 
 typedef struct Chain {
-    int page_num; // Number of pages, also denotes total memory in that subchain
+    size_t size; // Number of pages, also denotes total memory in that subchain
     size_t offset;
     struct Node* sub_chain;
     struct Chain* next;
@@ -44,6 +44,8 @@ Chain* internal_chains_ptr;
 Chain* free_list_head;
 int firstTime;
 
+Node* internal_node_create();
+Chain* internal_chain_create();
 /*
 Initializes all the required parameters for the MeMS system. The main parameters to be initialized are:
 1. the head of the free list i.e. the pointer that points to the head of the free list
@@ -113,7 +115,15 @@ void* mems_malloc(size_t size){
         newProcessNode->prev=NULL;
         newHoleNode->next=NULL;
         newHoleNode->prev=newProcessNode;
-        
+        Chain* newChain=internal_chain_create();
+        free_list_head=newChain;
+        newChain->offset=1000;
+        newChain->sub_chain=newProcessNode;
+        newChain->next=NULL;
+        newChain->prev=NULL;
+        newChain->size=allocationSize;
+        firstTime=0;
+        return (void*)newChain->offset;
 
         // Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         // Node* newProcessNode=tempNode;
@@ -295,6 +305,21 @@ Node* internal_node_create(){
         internal_nodes_ptr=new_ptr;
         internal_nodes_head=new_ptr;
         ret=internal_nodes_ptr;
+    }
+    return ret;
+}
+
+Chain* internal_chain_create(){
+    Chain* ret;
+    if(internal_chains_ptr+sizeof(Chain)<internal_chains_head+PAGE_SIZE){
+        ret=internal_chains_ptr;
+        internal_chains_ptr++;
+    }
+    else{
+        Chain* new_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        internal_chains_ptr=new_ptr;
+        internal_chains_head=new_ptr;
+        ret=internal_chains_ptr;
     }
     return ret;
 }
