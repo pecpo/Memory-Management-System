@@ -45,6 +45,8 @@ int main(int argc, char const *argv[])
     */
     printf("\n--------- Freeing up the memory [mems_free] --------\n");
     mems_free(ptr[3]);
+    // mems_free(ptr[9]);
+
     mems_print_stats();
     ptr[3] = (int*)mems_malloc(sizeof(int)*250);
     mems_print_stats();

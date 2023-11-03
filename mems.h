@@ -154,14 +154,19 @@ void* mems_malloc(size_t size){
                 void* old_end=currentNode->end_addr;
                 currentNode->type = 1;
                 currentNode->end_addr = currentNode->start_addr + size - 1;
-                Node* newHoleNode=internal_node_create();
-                newHoleNode->start_addr=currentNode->end_addr+1;
-                newHoleNode->end_addr=old_end;
-                newHoleNode->type=0;
-                currentNode->next=newHoleNode;
-                newHoleNode->prev=currentNode;
-                newHoleNode->next=NULL;
-                return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
+                if(size==currentNode->end_addr-currentNode->start_addr+1 && currentNode->next!=NULL){
+                    return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
+                }
+                else{
+                    Node* newHoleNode=internal_node_create();
+                    newHoleNode->start_addr=currentNode->end_addr+1;
+                    newHoleNode->end_addr=old_end;
+                    newHoleNode->type=0;
+                    currentNode->next=newHoleNode;
+                    newHoleNode->prev=currentNode;
+                    newHoleNode->next=NULL;
+                    return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
+                }
             }
             currentNode = currentNode->next;
         }
@@ -290,43 +295,60 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: nothing
 */
 void mems_free(void *v_ptr){
+    int i=0;
     Chain* CurrentChain=free_list_head;
-    while(CurrentChain!=NULL){
-        if((size_t)v_ptr>=CurrentChain->offset){
+    while(CurrentChain->next!=NULL){
+        if((size_t)v_ptr>=CurrentChain->offset && (size_t)v_ptr<CurrentChain->next->offset){
             break;
         }
+        i++;
         CurrentChain=CurrentChain->next;
     }
-    int i=0;
+    // printf("%d\n",i);
+    // exit(0);
+    int j=0;
     Node* currentNode=CurrentChain->sub_chain;
     while(currentNode!=NULL){
         if((size_t)v_ptr<=CurrentChain->offset+(currentNode->start_addr-CurrentChain->sub_chain->start_addr)){
             break;
         }
-        i++;
+        j++;
         currentNode=currentNode->next;
     }
     currentNode->type=0;
-    if(currentNode->prev!=NULL && currentNode->prev->type==0){
-        currentNode->prev->end_addr=currentNode->end_addr;
-        currentNode->prev->next=currentNode->next;
-        if(currentNode->next!=NULL){
-            currentNode->next->prev=currentNode->prev;
-        }
-        if(currentNode->next==NULL){
-            CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+    // Node* itrnode=CurrentChain->sub_chain;
+    // while(itrnode->next!=NULL){
+    //     if(itrnode->type==0){
+    //         if(itrnode->next->type=0)
+    //     }
+    //     itrnode=itrnode->next;
+    // }
+
+
+    if(currentNode->prev!=NULL){
+        if(currentNode->prev->type==0){
+            currentNode->prev->end_addr=currentNode->end_addr;
+            currentNode->prev->next=currentNode->next;
+            if(currentNode->next!=NULL){
+                currentNode->next->prev=currentNode->prev;
+            }
+            if(currentNode->next==NULL){
+                CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+            }
         }
     }
-    if(currentNode->next!=NULL && currentNode->next->type==0){
-        currentNode->next->start_addr=currentNode->start_addr;
-        currentNode->next->prev=currentNode->prev;
-        if(currentNode->prev!=NULL){
-            currentNode->prev->next=currentNode->next;
-        }
-        if(currentNode->prev==NULL){
-            CurrentChain->sub_chain=currentNode->next;
-            CurrentChain->offset=CurrentChain->offset-(currentNode->end_addr-currentNode->start_addr);
-            CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+    if(currentNode->next!=NULL){
+        if(currentNode->next->type==0){
+            currentNode->next->start_addr=currentNode->start_addr;
+            currentNode->next->prev=currentNode->prev;
+            if(currentNode->prev!=NULL){
+                currentNode->prev->next=currentNode->next;
+            }
+            if(currentNode->prev==NULL){
+                CurrentChain->sub_chain=currentNode->next;
+                CurrentChain->offset=CurrentChain->offset-(currentNode->end_addr-currentNode->start_addr);
+                CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+            }
         }
     }
 }
