@@ -42,6 +42,7 @@ Node* internal_nodes_ptr;
 Chain* internal_chains_head;
 Chain* internal_chains_ptr;
 Chain* free_list_head;
+int chainsCount;
 int firstTime;
 
 Node* internal_node_create();
@@ -57,6 +58,7 @@ Returns: Nothing
 void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
+    chainsCount=0;
     firstTime=1;
     internal_nodes_head=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     internal_nodes_ptr=internal_nodes_head;
@@ -118,6 +120,7 @@ void* mems_malloc(size_t size){
             newChain->prev=NULL;
             newChain->size=allocationSize-1;
             firstTime=0;
+            chainsCount++;
             return (void*)newChain->offset;
         }
         else{
@@ -137,6 +140,7 @@ void* mems_malloc(size_t size){
             newChain->prev=NULL;
             newChain->size=allocationSize-1;
             firstTime=0;
+            chainsCount++;
             return (void*)newChain->offset;
         }
 
@@ -206,6 +210,7 @@ void* mems_malloc(size_t size){
     if(size==allocationSize){
         newProcessNode->next=NULL;
         newProcessNode->prev=NULL;
+        chainsCount++;
         return (void*)newChain->offset;
     }
     else{
@@ -217,6 +222,7 @@ void* mems_malloc(size_t size){
         newProcessNode->prev=NULL;
         newHoleNode->next=NULL;
         newHoleNode->prev=newProcessNode;
+        chainsCount++;
         return (void*)newChain->offset;
     }
 
@@ -253,11 +259,12 @@ void mems_print_stats(){
     size_t hole_memory=0;
     int pages_used=0;
     int main_length=0;
-    do{
+
+    for(int i=0;i<chainsCount;i++){
         printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
         Node* currentNode=currentChain->sub_chain;
         size_t start_ptr=currentChain->offset;
-        pages_used=pages_used+(currentChain->size/PAGE_SIZE);
+        pages_used=pages_used+((currentChain->size+1)/PAGE_SIZE);
         while(currentNode!=NULL){
             if(currentNode->type==1){
                 printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
@@ -274,15 +281,16 @@ void mems_print_stats(){
         printf("\n");
         currentChain=currentChain->next;
         main_length++;
-    }while (currentChain->next!=NULL);
+    }
     int sub_chain[main_length];
     int i=0;
     currentChain=free_list_head;
-    while(currentChain!=NULL){
+    for(int i=0;i<chainsCount;i++){
         Node* currentNode=currentChain->sub_chain;
         int sub_chain_length=0;
         while (currentNode!=NULL){
             sub_chain_length++;
+            currentNode=currentNode->next;
         }
         sub_chain[i]=sub_chain_length;
         i++;
@@ -295,7 +303,7 @@ void mems_print_stats(){
     for(i=0;i<main_length;i++){
         printf("%d,",sub_chain[i]);
     }
-    printf("]");
+    printf("]\n");
 }
 
 
