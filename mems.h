@@ -73,12 +73,13 @@ Input Parameter: Nothing
 Returns: Nothing
 */
 void mems_finish(){
-    Chain* CurrentChain=free_list_head;
-    while(CurrentChain!=NULL){
-        if(munmap(CurrentChain,CurrentChain->size)==-1){
+    Chain* CurrentChain=free_list_head->next->next;
+    // printf("%ld",(size_t)CurrentChain->sub_chain->start_addr%(size_t)PAGE_SIZE);
+        if(munmap((void*)CurrentChain->sub_chain->start_addr,10000)==-1){
+            printf("fail!");
             perror("munmap");
         }
-    }
+        CurrentChain=CurrentChain->next;
 }
 
 
@@ -247,7 +248,6 @@ void mems_print_stats(){
         main_length++;
     }
     int sub_chain[main_length];
-    int i=0;
     currentChain=free_list_head;
     for(int i=0;i<chainsCount;i++){
         Node* currentNode=currentChain->sub_chain;
@@ -257,14 +257,13 @@ void mems_print_stats(){
             currentNode=currentNode->next;
         }
         sub_chain[i]=sub_chain_length;
-        i++;
         currentChain=currentChain->next;
     }
     printf("Used Pages:%d\n",pages_used);
     printf("Unused memory:%zu\n",hole_memory);
     printf("Main Chain Length:%d\n",main_length);
     printf("Sub-chain length array:[");
-    for(i=0;i<main_length;i++){
+    for(int i=0;i<main_length;i++){
         printf("%d,",sub_chain[i]);
     }
     printf("]\n");
@@ -287,21 +286,7 @@ void *mems_get(void*v_ptr){
     }
     
     return (void*)CurrentChain->sub_chain->start_addr+(size_t)v_ptr-CurrentChain->offset;
-
-
-    // size_t start_ptr=(size_t)v_ptr-CurrentChain->offset;
-    // Node* CurrentNode=CurrentChain->sub_chain;
-    // while(CurrentNode!=NULL){
-    //     size_t node_size=CurrentNode->size;
-    //     if(start_ptr>node_size){
-    //         start_ptr=start_ptr-node_size;
-    //     }
-    //     else{
-    //         break;
-    //     }
-    //     CurrentNode=CurrentNode->next;
-    // }
-    // return (void*)CurrentNode+a; //TODO figure out return value and type
+    
 }
 
 
@@ -311,10 +296,50 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: nothing
 */
 void mems_free(void *v_ptr){
-    
+    Chain* CurrentChain=free_list_head;
+    while(CurrentChain->next!=NULL){
+        if((size_t)v_ptr>=CurrentChain->offset){
+            break;
+        }
+        CurrentChain=CurrentChain->next;
+    }
+    int i=0;
+    Node* currentNode=CurrentChain->sub_chain;
+    while(currentNode!=NULL){
+        if((size_t)v_ptr<=CurrentChain->offset+(currentNode->start_addr-CurrentChain->sub_chain->start_addr)){
+            break;
+        }
+        i++;
+        currentNode=currentNode->next;
+    }
+    currentNode->type=0;
+    if(currentNode->prev!=NULL && currentNode->prev->type==0){
+        currentNode->prev->end_addr=currentNode->end_addr;
+        currentNode->prev->next=currentNode->next;
+        if(currentNode->next!=NULL){
+            currentNode->next->prev=currentNode->prev;
+        }
+        if(currentNode->next==NULL){
+            CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+        }
+    }
+    if(currentNode->next!=NULL && currentNode->next->type==0){
+        currentNode->next->start_addr=currentNode->start_addr;
+        currentNode->next->prev=currentNode->prev;
+        if(currentNode->prev!=NULL){
+            currentNode->prev->next=currentNode->next;
+        }
+        if(currentNode->prev==NULL){
+            CurrentChain->sub_chain=currentNode->next;
+            CurrentChain->offset=CurrentChain->offset-(currentNode->end_addr-currentNode->start_addr);
+            CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
+        }
+    }
 }
 
-
+/*
+Internal functions to create new nodes and chains
+*/
 Node* internal_node_create(){
     Node* ret;
     if(internal_nodes_ptr+sizeof(Node)<internal_nodes_head+PAGE_SIZE){

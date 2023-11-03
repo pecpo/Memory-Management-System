@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
     */
     printf("\n--------- Printing Stats [mems_print_stats] --------\n");
     mems_print_stats();
-    exit(0);
+    // exit(0);
     /*
     This section shows the effect of freeing up space on free list and also the effect of 
     reallocating the space that will be fullfilled by the free list.
