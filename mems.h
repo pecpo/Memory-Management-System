@@ -6,7 +6,7 @@
 // you can also make additional helper functions a you wish
 
 // REFER DOCUMENTATION FOR MORE DETAILS ON FUNSTIONS AND THEIR FUNCTIONALITY
-*/
+
 // add other headers as required
 #include <unistd.h>
 #include <stdio.h>
@@ -104,7 +104,7 @@ void* mems_malloc(size_t size){
     // Traverse the free list and find a suitable segment to allocate
     if(firstTime){
         Node* newProcessNode=internal_node_create();
-        newProcessNode->start_addr=mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
         newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
         newProcessNode->type=1;
         Node* newHoleNode=internal_node_create();
@@ -144,54 +144,77 @@ void* mems_malloc(size_t size){
         // firstTime=0;
         // return newChain->offset;
     }
-    size_t virtualAddress=0;
+    // size_t virtualAddress=0;
+    // while (currentChain != NULL){
+    //     Node* currentNode = currentNode->sub_chain;
+    //     virtualAddress=currentNode->offset;
+    //     while (currentNode != NULL) {
+    //         if (currentChain->type == 0 && currentChain->size >= allocation_size) {
+    //             if (currentChain->size > allocation_size) {
+    //                 newSpace->size = currentSegment->size - allocation_size;
+    //                 newSpace->type = 0;
+    //                 newSpace->prev = currentChain;
+    //                 newSpace->next = currentChain->next;
+    //                 currentChain->next = newSpace;
+    //                 currentChain->size = allocation_size;
+    //                 return virtualAddress;
+    //             }
+    //             else{
+    //                 currentChain->type = 1;
+    //                 return virtualAddress;
+    //             }
+    //         }
+    //         else{
+    //             virtualAddress+=currentChain->size;
+    //         }
+    //         currentNode = currentNode->next;
+    //     }
+    //     currentChain = currentChain->next;
+    // }
+
+    // Did not find an empty space, creating new subchain
     Chain* currentChain = free_list_head;
-    while (currentChain != NULL){
-        Node* currentNode = currentNode->sub_chain;
-        virtualAddress=currentNode->offset;
-        while (currentNode != NULL) {
-            if (currentChain->type == 0 && currentChain->size >= allocation_size) {
-                if (currentChain->size > allocation_size) {
-                    newSpace->size = currentSegment->size - allocation_size;
-                    newSpace->type = 0;
-                    newSpace->prev = currentChain;
-                    newSpace->next = currentChain->next;
-                    currentChain->next = newSpace;
-                    currentChain->size = allocation_size;
-                    return virtualAddress;
-                }
-                else{
-                    currentChain->type = 1;
-                    return virtualAddress;
-                }
-            }
-            else{
-                virtualAddress+=currentChain->size;
-            }
-            currentNode = currentNode->next;
-        }
-        currentChain = currentChain->next;
+    while(currentChain->next!=NULL){
+        currentChain=currentChain->next;
     }
-    while(currentNode->next!=NULL){
-        currentNode=currentNode->next;
-    }
-    Node* tempNode = (Node*)mmap(NULL, allocation_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    Node* newProcessNode=tempNode;
-    Node* newHoleNode=(char*) tempNode +sizeof(Node)+ size;
-    newProcessNode->size=size;
+    Chain* newChain=internal_chain_create();
+    currentChain->next=newChain;
+    newChain->prev=currentChain;
+    newChain->next=NULL;
+    newChain->size=allocationSize;
+    newChain->offset=currentChain->offset+currentChain->size;
+    Node* newProcessNode=internal_node_create();
+    newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
+    newProcessNode->type=1;
+    Node* newHoleNode=internal_node_create();
+    newHoleNode->start_addr=newProcessNode->end_addr+1;
+    newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
+    newHoleNode->type=0;
     newProcessNode->next=newHoleNode;
     newProcessNode->prev=NULL;
-    newHoleNode->size=allocation_size-size;
-    newHoleNode->prev=newProcessNode;
     newHoleNode->next=NULL;
-    Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    newChain->sub_chain = newProcessNode;
-    newChain->prev = currentNode;
-    newChain->next = NULL;
-    newChain->offset=currentNode->size+currentNode->offset;
-    newChain->size=allocationSize;
-    currentNode->next=newChain;
-    return newChain->offset;
+    newHoleNode->prev=newProcessNode;
+    newChain->sub_chain=newProcessNode;
+    return (void*)newChain->offset;
+
+
+    // Node* newProcessNode=tempNode;
+    // Node* newHoleNode=(char*) tempNode +sizeof(Node)+ size;
+    // newProcessNode->size=size;
+    // newProcessNode->next=newHoleNode;
+    // newProcessNode->prev=NULL;
+    // newHoleNode->size=allocation_size-size;
+    // newHoleNode->prev=newProcessNode;
+    // newHoleNode->next=NULL;
+    // Chain* newChain = (Chain*)mmap(NULL, sizeof(Chain), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    // newChain->sub_chain = newProcessNode;
+    // newChain->prev = currentNode;
+    // newChain->next = NULL;
+    // newChain->offset=currentNode->size+currentNode->offset;
+    // newChain->size=allocationSize;
+    // currentNode->next=newChain;
+    // return newChain->offset;
 }
 
 
@@ -204,52 +227,52 @@ Parameter: Nothing
 Returns: Nothing but should print the necessary information on STDOUT
 */
 void mems_print_stats(){
-    Chain* currentChain=free_list_head;
-    size_t hole_memory=0;
-    int pages_used=0;
-    int main_length=0;
-    while(currentChain!=NULL){
-        printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
-        Node* currentNode=currentChain->sub_chain;
-        size_t start_ptr=currentChain->offset;
-        pages_used=pages_used+(currentChain->size/PAGE_SIZE);
-        while(currentNode!=NULL){
-            if(currentNode->type==0){
-                printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
-                start_ptr=start_ptr+currentNode->size;
-            }
-            else if(currentNode->type==1){
-                printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
-                start_ptr=start_ptr+currentNode->size;
-                hole_memory=hole_memory+currentNode->size;
-            }
-            currentNode=currentNode->next;
-        }
-        printf("NULL");
-        printf("\n");
-        currentNode=currentNode->next;
-        main_length++;
-    }
-    int sub_chain[main_length];
-    int i=0;
-    currentChain=free_list_head;
-    while(currentChain!=NULL){
-        Node* currentNode=currentChain->sub_chain;
-        int sub_chain_length=0;
-        while (currentNode!=NULL){
-            sub_chain_length++;
-        }
-        sub_chain[i]=sub_chain_length;
-        i++;
-        currentChain=currentChain->next;
-    }
-    printf("Used Pages:%d\n",pages_used);
-    printf("Unused memory:%zu\n",hole_memory);
-    printf("Main Chain Length:%d\n",main_length);
-    printf("Sub-chain length array:[")
-    for(i=0;i<main_length;i++){
-        printf("%d,",sub_chain[i]);
-    }
+    // Chain* currentChain=free_list_head;
+    // size_t hole_memory=0;
+    // int pages_used=0;
+    // int main_length=0;
+    // while(currentChain!=NULL){
+    //     printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
+    //     Node* currentNode=currentChain->sub_chain;
+    //     size_t start_ptr=currentChain->offset;
+    //     pages_used=pages_used+(currentChain->size/PAGE_SIZE);
+    //     while(currentNode!=NULL){
+    //         if(currentNode->type==0){
+    //             printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
+    //             start_ptr=start_ptr+currentNode->size;
+    //         }
+    //         else if(currentNode->type==1){
+    //             printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->size-1);
+    //             start_ptr=start_ptr+currentNode->size;
+    //             hole_memory=hole_memory+currentNode->size;
+    //         }
+    //         currentNode=currentNode->next;
+    //     }
+    //     printf("NULL");
+    //     printf("\n");
+    //     currentNode=currentNode->next;
+    //     main_length++;
+    // }
+    // int sub_chain[main_length];
+    // int i=0;
+    // currentChain=free_list_head;
+    // while(currentChain!=NULL){
+    //     Node* currentNode=currentChain->sub_chain;
+    //     int sub_chain_length=0;
+    //     while (currentNode!=NULL){
+    //         sub_chain_length++;
+    //     }
+    //     sub_chain[i]=sub_chain_length;
+    //     i++;
+    //     currentChain=currentChain->next;
+    // }
+    // printf("Used Pages:%d\n",pages_used);
+    // printf("Unused memory:%zu\n",hole_memory);
+    // printf("Main Chain Length:%d\n",main_length);
+    // printf("Sub-chain length array:[")
+    // for(i=0;i<main_length;i++){
+    //     printf("%d,",sub_chain[i]);
+    // }
     printf("]");
 }
 
@@ -262,25 +285,29 @@ Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 void *mems_get(void*v_ptr){
     
     Chain* CurrentChain=free_list_head;
-    while(CurrentChain!=NULL){
-        if((size_t)v_ptr<=CurrentChain->offset+CurrentChain->size){
+    while(CurrentChain->next!=NULL){
+        if((size_t)v_ptr>=CurrentChain->offset){
             break;
         }
         CurrentChain=CurrentChain->next;
     }
-    size_t start_ptr=(size_t)v_ptr-CurrentChain->offset;
-    Node* CurrentNode=CurrentChain->sub_chain;
-    while(CurrentNode!=NULL){
-        size_t node_size=CurrentNode->size;
-        if(start_ptr>node_size){
-            start_ptr=start_ptr-node_size;
-        }
-        else{
-            break;
-        }
-        CurrentNode=CurrentNode->next;
-    }
-    return (void*)CurrentNode+a; //TODO figure out return value and type
+    
+    return (void*)CurrentChain->sub_chain->start_addr+(size_t)v_ptr-CurrentChain->offset;
+
+
+    // size_t start_ptr=(size_t)v_ptr-CurrentChain->offset;
+    // Node* CurrentNode=CurrentChain->sub_chain;
+    // while(CurrentNode!=NULL){
+    //     size_t node_size=CurrentNode->size;
+    //     if(start_ptr>node_size){
+    //         start_ptr=start_ptr-node_size;
+    //     }
+    //     else{
+    //         break;
+    //     }
+    //     CurrentNode=CurrentNode->next;
+    // }
+    // return (void*)CurrentNode+a; //TODO figure out return value and type
 }
 
 
@@ -305,6 +332,7 @@ Node* internal_node_create(){
         internal_nodes_ptr=new_ptr;
         internal_nodes_head=new_ptr;
         ret=internal_nodes_ptr;
+        internal_nodes_ptr++;
     }
     return ret;
 }
@@ -320,6 +348,7 @@ Chain* internal_chain_create(){
         internal_chains_ptr=new_ptr;
         internal_chains_head=new_ptr;
         ret=internal_chains_ptr;
+        internal_chains_ptr++;
     }
     return ret;
 }
