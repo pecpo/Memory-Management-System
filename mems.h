@@ -14,7 +14,6 @@
 #include <stddef.h>
 #include <sys/mman.h>
 
-
 /*
 Use this macro where ever you need PAGE_SIZE.
 As PAGESIZE can differ system to system we should have flexibility to modify this 
@@ -38,8 +37,8 @@ typedef struct Chain {
     struct Chain* prev;
 } Chain;
 
+Node* internal_nodes_head;
 Node* internal_nodes_ptr;
-size_t internal_nodes_arr_size;
 Chain* internal_chains_ptr;
 Chain* free_list_head;
 int firstTime;
@@ -56,8 +55,8 @@ void mems_init(){
     // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     free_list_head=NULL;
     firstTime=1;
-    internal_nodes_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    internal_nodes_arr_size=PAGE_SIZE;
+    internal_nodes_head=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    internal_nodes_ptr=internal_nodes_head;
     internal_chains_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 }
 
@@ -90,6 +89,7 @@ Parameter: The size of the memory the user program wants
 Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 void* mems_malloc(size_t size){
+    // Find the correct size to allocate in case of new subchain
     size_t allocationSize=0;
     if(size%PAGE_SIZE==0){
         allocationSize = size;
@@ -267,19 +267,18 @@ void mems_free(void *v_ptr){
     
 }
 
-//Unviable strat for creating nodes
 
-// Node* internal_node_create(){
-//     if(internal_nodes_ptr+sizeof(Node)<internal_nodes_arr_size){
-//         internal_nodes_ptr++;
-//     }
-//     else{
-//         Node* new_ptr=(Node*)mmap(NULL, internal_nodes_arr_size*2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-//         memcpy(new_ptr, internal_nodes_ptr, min(internal_nodes_arr_size, internal_nodes_arr_size*2));
-        
-//         munmap(internal_nodes_ptr,internal_nodes_arr_size);
-//         internal_nodes_ptr=new_ptr;
-//         internal_nodes_arr_size*=2;
-
-//     }
-// }
+Node* internal_node_create(){
+    Node* ret;
+    if(internal_nodes_ptr+sizeof(Node)<internal_nodes_head+PAGE_SIZE){
+        ret=internal_nodes_ptr;
+        internal_nodes_ptr++;
+    }
+    else{
+        Node* new_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        internal_nodes_ptr=new_ptr;
+        internal_nodes_head=new_ptr;
+        ret=internal_nodes_ptr;
+    }
+    return ret;
+}
