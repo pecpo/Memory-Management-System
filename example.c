@@ -12,8 +12,8 @@ int main(int argc, char const *argv[])
     This allocates 10 arrays of 250 integers each
     */
     printf("\n------- Allocated virtual addresses [mems_malloc] -------\n");
-    for(int i=0;i<10;i++){
-        ptr[i] = (int*)mems_malloc(sizeof(int)*250);
+    for(int i=0;i<1000;i++){
+        ptr[i] = (int*)mems_malloc(sizeof(int)*1024);
         printf("Virtual address: %lu\n", (unsigned long)ptr[i]);
     }
 
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
     */
     printf("\n--------- Printing Stats [mems_print_stats] --------\n");
     mems_print_stats();
-
+    exit(0);
     /*
     This section shows the effect of freeing up space on free list and also the effect of 
     reallocating the space that will be fullfilled by the free list.
