@@ -162,22 +162,22 @@ void* mems_malloc(size_t size){
                 newHoleNode->next=NULL;
                 return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
             }
-            else{
-                printf("nigga");
-            }
             currentNode = currentNode->next;
         }
         currentChain = currentChain->next;
     }
 
     // Did not find an empty space, creating new subchain
-    
+    currentChain = free_list_head;
+    while(currentChain->next!=NULL){
+        currentChain=currentChain->next;
+    }
     Chain* newChain=internal_chain_create();
     currentChain->next=newChain;
     newChain->prev=currentChain;
     newChain->next=NULL;
     newChain->size=allocationSize-1;
-    newChain->offset=currentChain->offset+currentChain->size;
+    newChain->offset=currentChain->offset+currentChain->size+1;
     Node* newProcessNode=internal_node_create();
     newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
@@ -222,19 +222,22 @@ void mems_print_stats(){
         printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
         Node* currentNode=currentChain->sub_chain;
         size_t start_ptr=currentChain->offset;
+        size_t s2=start_ptr;
         pages_used=pages_used+((currentChain->size+1)/PAGE_SIZE);
         while(currentNode!=NULL){
             if(currentNode->next==NULL){
-                start_ptr--;
+                s2--;
             }
             if(currentNode->type==1){
-                printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
+                printf("P[%zu:%zu]<->",start_ptr,s2+currentNode->end_addr-currentNode->start_addr);
                 start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr+1);
+                s2=start_ptr;
             }
             else if(currentNode->type==0){
-                printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
+                printf("H[%zu:%zu]<->",start_ptr,s2+currentNode->end_addr-currentNode->start_addr);
                 start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr+1);
                 hole_memory=hole_memory+(currentNode->end_addr-currentNode->start_addr);
+                s2=start_ptr;
             }
             currentNode=currentNode->next;
         }
