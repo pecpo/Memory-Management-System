@@ -127,7 +127,7 @@ void* mems_malloc(size_t size){
         else{
             Node* newHoleNode=internal_node_create();
             newHoleNode->start_addr=newProcessNode->end_addr+1;
-            newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
+            newHoleNode->end_addr=newProcessNode->start_addr+allocationSize-1;
             newHoleNode->type=0;
             newProcessNode->next=newHoleNode;
             newProcessNode->prev=NULL;
@@ -150,7 +150,7 @@ void* mems_malloc(size_t size){
     for(int i=0;i<chainsCount;i++){
         Node* currentNode = currentChain->sub_chain;
         while (currentNode != NULL) {
-            if (currentNode->type == 0 && currentNode->end_addr-currentNode->start_addr >=size) {
+            if (currentNode->type == 0 && currentNode->end_addr-currentNode->start_addr+1 >=size) {
                 void* old_end=currentNode->end_addr;
                 currentNode->type = 1;
                 currentNode->end_addr = currentNode->start_addr + size - 1;
@@ -193,7 +193,7 @@ void* mems_malloc(size_t size){
     else{
         Node* newHoleNode=internal_node_create();
         newHoleNode->start_addr=newProcessNode->end_addr+1;
-        newHoleNode->end_addr=newProcessNode->start_addr+allocationSize;
+        newHoleNode->end_addr=newProcessNode->start_addr+allocationSize-1;
         newHoleNode->type=0;
         newProcessNode->next=newHoleNode;
         newProcessNode->prev=NULL;
@@ -223,22 +223,16 @@ void mems_print_stats(){
         printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
         Node* currentNode=currentChain->sub_chain;
         size_t start_ptr=currentChain->offset;
-        size_t s2=start_ptr;
         pages_used=pages_used+((currentChain->size+1)/PAGE_SIZE);
         while(currentNode!=NULL){
-            if(currentNode->next==NULL){
-                s2--;
-            }
             if(currentNode->type==1){
-                printf("P[%zu:%zu]<->",start_ptr,s2+currentNode->end_addr-currentNode->start_addr);
+                printf("P[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
                 start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr+1);
-                s2=start_ptr;
             }
             else if(currentNode->type==0){
-                printf("H[%zu:%zu]<->",start_ptr,s2+currentNode->end_addr-currentNode->start_addr);
+                printf("H[%zu:%zu]<->",start_ptr,start_ptr+currentNode->end_addr-currentNode->start_addr);
                 start_ptr=start_ptr+(currentNode->end_addr-currentNode->start_addr+1);
-                hole_memory=hole_memory+(currentNode->end_addr-currentNode->start_addr);
-                s2=start_ptr;
+                hole_memory=hole_memory+(currentNode->end_addr-currentNode->start_addr+1);
             }
             currentNode=currentNode->next;
         }
@@ -297,7 +291,7 @@ Returns: nothing
 */
 void mems_free(void *v_ptr){
     Chain* CurrentChain=free_list_head;
-    while(CurrentChain->next!=NULL){
+    while(CurrentChain!=NULL){
         if((size_t)v_ptr>=CurrentChain->offset){
             break;
         }
