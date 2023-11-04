@@ -316,41 +316,65 @@ void mems_free(void *v_ptr){
         currentNode=currentNode->next;
     }
     currentNode->type=0;
-    // Node* itrnode=CurrentChain->sub_chain;
-    // while(itrnode->next!=NULL){
-    //     if(itrnode->type==0){
-    //         if(itrnode->next->type=0)
+    Node* itrnode=CurrentChain->sub_chain;
+
+    int flag=0;
+    while(itrnode!=NULL){
+        if(itrnode->next!=NULL){
+            if(itrnode->type==0 && itrnode->next->type==0){
+                flag=1;
+                break;
+            }
+        }
+        itrnode=itrnode->next;
+    }
+    if(!flag){return;}
+
+    while(itrnode->next!=NULL){
+        if(itrnode->next->type!=0){
+            break;
+        }
+        if(itrnode->next->type==0){
+
+            itrnode->end_addr=itrnode->next->end_addr;
+            itrnode->next->end_addr=NULL;
+            if(itrnode->next->next!=NULL){
+                itrnode->next->next->prev=itrnode;
+                itrnode->next=itrnode->next->next;  
+            }
+            else{
+                itrnode->next=NULL;
+            }
+        }
+        else{
+            break;
+        }
+    }
+
+
+
+    // if(currentNode->prev!=NULL){
+    //     if(currentNode->prev->type==0){
+    //         currentNode->prev->end_addr=currentNode->end_addr;
+    //         currentNode->prev->next=currentNode->next;
+    //         if(currentNode->next!=NULL){
+    //             currentNode->next->prev=currentNode->prev;
+    //         }
+            
     //     }
-    //     itrnode=itrnode->next;
     // }
+    // if(currentNode->next!=NULL){
+    //     if(currentNode->next->type==0){
+    //         currentNode->next->start_addr=currentNode->start_addr;
+    //         currentNode->next->prev=currentNode->prev;
+    //         if(currentNode->prev!=NULL){
+    //             currentNode->prev->next=currentNode->next;
+    //         }
+            
+    //     }
+    // }
+    
 
-
-    if(currentNode->prev!=NULL){
-        if(currentNode->prev->type==0){
-            currentNode->prev->end_addr=currentNode->end_addr;
-            currentNode->prev->next=currentNode->next;
-            if(currentNode->next!=NULL){
-                currentNode->next->prev=currentNode->prev;
-            }
-            if(currentNode->next==NULL){
-                CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
-            }
-        }
-    }
-    if(currentNode->next!=NULL){
-        if(currentNode->next->type==0){
-            currentNode->next->start_addr=currentNode->start_addr;
-            currentNode->next->prev=currentNode->prev;
-            if(currentNode->prev!=NULL){
-                currentNode->prev->next=currentNode->next;
-            }
-            if(currentNode->prev==NULL){
-                CurrentChain->sub_chain=currentNode->next;
-                CurrentChain->offset=CurrentChain->offset-(currentNode->end_addr-currentNode->start_addr);
-                CurrentChain->size=CurrentChain->size+(currentNode->end_addr-currentNode->start_addr);
-            }
-        }
-    }
 }
 
 /*
