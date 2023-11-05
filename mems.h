@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <sys/mman.h>
 
 /*
@@ -73,13 +74,16 @@ Input Parameter: Nothing
 Returns: Nothing
 */
 void mems_finish(){
-    Chain* CurrentChain=free_list_head->next->next;
-    // printf("%ld",(size_t)CurrentChain->sub_chain->start_addr%(size_t)PAGE_SIZE);
-        if(munmap((void*)CurrentChain->sub_chain->start_addr,10000)==-1){
-            printf("fail!");
+    Chain* CurrentChain=free_list_head;
+    while(CurrentChain->next!=NULL){
+        // printf("%ld",(size_t)CurrentChain->sub_chain->start_addr%(size_t)PAGE_SIZE);
+        if(munmap((void*)CurrentChain->sub_chain->start_addr,(CurrentChain->size))==-1){
+            printf("mems_finish failed!\n");
             perror("munmap");
         }
         CurrentChain=CurrentChain->next;
+    }
+    //TODO: keep track of all of struct node arrays and struct chain arrays and unmap them
 }
 
 
@@ -295,24 +299,18 @@ Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: nothing
 */
 void mems_free(void *v_ptr){
-    int i=0;
     Chain* CurrentChain=free_list_head;
     while(CurrentChain->next!=NULL){
         if((size_t)v_ptr>=CurrentChain->offset && (size_t)v_ptr<CurrentChain->next->offset){
             break;
         }
-        i++;
         CurrentChain=CurrentChain->next;
     }
-    // printf("%d\n",i);
-    // exit(0);
-    int j=0;
     Node* currentNode=CurrentChain->sub_chain;
     while(currentNode!=NULL){
         if((size_t)v_ptr<=CurrentChain->offset+(currentNode->start_addr-CurrentChain->sub_chain->start_addr)){
             break;
         }
-        j++;
         currentNode=currentNode->next;
     }
     currentNode->type=0;
@@ -350,31 +348,6 @@ void mems_free(void *v_ptr){
             break;
         }
     }
-
-
-
-    // if(currentNode->prev!=NULL){
-    //     if(currentNode->prev->type==0){
-    //         currentNode->prev->end_addr=currentNode->end_addr;
-    //         currentNode->prev->next=currentNode->next;
-    //         if(currentNode->next!=NULL){
-    //             currentNode->next->prev=currentNode->prev;
-    //         }
-            
-    //     }
-    // }
-    // if(currentNode->next!=NULL){
-    //     if(currentNode->next->type==0){
-    //         currentNode->next->start_addr=currentNode->start_addr;
-    //         currentNode->next->prev=currentNode->prev;
-    //         if(currentNode->prev!=NULL){
-    //             currentNode->prev->next=currentNode->next;
-    //         }
-            
-    //     }
-    // }
-    
-
 }
 
 /*
@@ -398,7 +371,7 @@ Node* internal_node_create(){
 
 Chain* internal_chain_create(){
     Chain* ret;
-    if(internal_chains_ptr+sizeof(Chain)<internal_chains_head+PAGE_SIZE){
+    if((uintptr_t)internal_chains_ptr+sizeof(Chain)<(uintptr_t)internal_chains_head+PAGE_SIZE){
         ret=internal_chains_ptr;
         internal_chains_ptr++;
     }
