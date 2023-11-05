@@ -57,6 +57,7 @@ Initializes all the required parameters for the MeMS system. The main parameters
 Input Parameter: Nothing
 Returns: Nothing
 */
+
 void mems_init(){
     chainsCount=0;
     firstTime=1;
@@ -74,6 +75,7 @@ allocated memory using the munmap system call.
 Input Parameter: Nothing
 Returns: Nothing
 */
+
 void mems_finish(){
     Chain* CurrentChain=free_list_head;
     while(CurrentChain->next!=NULL){
@@ -87,7 +89,6 @@ void mems_finish(){
     //TODO: keep track of all of struct node arrays and struct chain arrays and unmap them
 }
 
-
 /*
 Allocates memory of the specified size by reusing a segment from the free list if 
 a sufficiently large segment is available. 
@@ -100,6 +101,7 @@ by adding it to the free list.
 Parameter: The size of the memory the user program wants
 Returns: MeMS Virtual address (that is created by MeMS)
 */ 
+
 void* mems_malloc(size_t size){
     // Find the correct size to allocate in case of new subchain
     size_t allocationSize=0;
@@ -214,7 +216,6 @@ void* mems_malloc(size_t size){
     }
 }
 
-
 /*
 this function print the stats of the MeMS system like
 1. How many pages are utilised by using the mems_malloc
@@ -223,6 +224,7 @@ this function print the stats of the MeMS system like
 Parameter: Nothing
 Returns: Nothing but should print the necessary information on STDOUT
 */
+
 void mems_print_stats(){
     Chain* currentChain=free_list_head;
     size_t hole_memory=0;
@@ -273,12 +275,12 @@ void mems_print_stats(){
     printf("]\n");
 }
 
-
 /*
 Returns the MeMS physical address mapped to ptr ( ptr is MeMS virtual address).
 Parameter: MeMS Virtual address (that is created by MeMS)
 Returns: MeMS physical address mapped to the passed ptr (MeMS virtual address).
 */
+
 void *mems_get(void*v_ptr){
     
     Chain* CurrentChain=free_list_head;
@@ -293,12 +295,12 @@ void *mems_get(void*v_ptr){
     
 }
 
-
 /*
 this function free up the memory pointed by our virtual_address and add it to the free list
 Parameter: MeMS Virtual address (that is created by MeMS) 
 Returns: nothing
 */
+
 void mems_free(void *v_ptr){
     Chain* CurrentChain=free_list_head;
     while(CurrentChain->next!=NULL){
@@ -354,6 +356,7 @@ void mems_free(void *v_ptr){
 /*
 Internal functions to create new nodes and chains
 */
+
 Node* internal_node_create(){
     Node* ret;
     if(internal_nodes_ptr+sizeof(Node)<internal_nodes_head+PAGE_SIZE){
