@@ -45,6 +45,7 @@ Chain* internal_chains_ptr;
 Chain* free_list_head;
 int chainsCount;
 int firstTime;
+int baseVirtualAddress;
 
 Node* internal_node_create();
 Chain* internal_chain_create();
@@ -57,10 +58,10 @@ Input Parameter: Nothing
 Returns: Nothing
 */
 void mems_init(){
-    // free_list_head = (Node*)mmap(NULL, sizeof(Node), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    free_list_head=NULL;
     chainsCount=0;
     firstTime=1;
+    baseVirtualAddress=1000;
+    free_list_head=NULL;
     internal_nodes_head=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     internal_nodes_ptr=internal_nodes_head;
     internal_chains_head=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -119,7 +120,7 @@ void* mems_malloc(size_t size){
             newProcessNode->prev=NULL;
             Chain* newChain=internal_chain_create();
             free_list_head=newChain;
-            newChain->offset=1000;
+            newChain->offset=baseVirtualAddress;
             newChain->sub_chain=newProcessNode;
             newChain->next=NULL;
             newChain->prev=NULL;
@@ -139,7 +140,7 @@ void* mems_malloc(size_t size){
             newHoleNode->prev=newProcessNode;
             Chain* newChain=internal_chain_create();
             free_list_head=newChain;
-            newChain->offset=1000;
+            newChain->offset=baseVirtualAddress;
             newChain->sub_chain=newProcessNode;
             newChain->next=NULL;
             newChain->prev=NULL;
