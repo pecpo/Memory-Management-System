@@ -8,6 +8,7 @@
 // REFER DOCUMENTATION FOR MORE DETAILS ON FUNSTIONS AND THEIR FUNCTIONALITY
 
 // add other headers as required
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +21,7 @@ Use this macro where ever you need PAGE_SIZE.
 As PAGESIZE can differ system to system we should have flexibility to modify this 
 macro to make the output of all system same and conduct a fair evaluation. 
 */
+
 #define PAGE_SIZE 4096
 
 typedef struct Node {
@@ -49,6 +51,7 @@ int baseVirtualAddress;
 
 Node* internal_node_create();
 Chain* internal_chain_create();
+
 /*
 Initializes all the required parameters for the MeMS system. The main parameters to be initialized are:
 1. the head of the free list i.e. the pointer that points to the head of the free list
