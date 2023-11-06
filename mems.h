@@ -89,6 +89,9 @@ void mems_finish(){
         }
         CurrentChain=CurrentChain->next;
     }
+    munmap((void*)internal_chains_head,PAGE_SIZE);
+    munmap((void*)internal_nodes_head,PAGE_SIZE);
+    free_list_head=NULL;
     //TODO: keep track of all of struct node arrays and struct chain arrays and unmap them
 }
 
