@@ -82,7 +82,6 @@ Returns: Nothing
 void mems_finish(){
     Chain* CurrentChain=free_list_head;
     while(CurrentChain->next!=NULL){
-        // printf("%ld",(size_t)CurrentChain->sub_chain->start_addr%(size_t)PAGE_SIZE);
         if(munmap((void*)CurrentChain->sub_chain->start_addr,(CurrentChain->size))==-1){
             printf("mems_finish failed!\n");
             perror("munmap");
@@ -92,7 +91,7 @@ void mems_finish(){
     munmap((void*)internal_chains_head,PAGE_SIZE);
     munmap((void*)internal_nodes_head,PAGE_SIZE);
     free_list_head=NULL;
-    //TODO: keep track of all of struct node arrays and struct chain arrays and unmap them
+    
 }
 
 /*
