@@ -109,7 +109,6 @@ Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 
 void* mems_malloc(size_t size){
-
     size_t allocationSize=0;
     if(size%PAGE_SIZE==0){
         allocationSize = size;
@@ -117,7 +116,6 @@ void* mems_malloc(size_t size){
     else{
         allocationSize = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
     }
-    
     if(firstTime){
         Node* newProcessNode=internal_node_create();
         newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
