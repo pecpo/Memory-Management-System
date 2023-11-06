@@ -67,8 +67,16 @@ void mems_init(){
     baseVirtualAddress=1000;
     free_list_head=NULL;
     internal_nodes_head=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if(internal_nodes_head==MAP_FAILED){
+        perror("Mmap failed");
+        exit(1);
+    }
     internal_nodes_ptr=internal_nodes_head;
     internal_chains_head=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if(internal_chains_head==MAP_FAILED){
+        perror("Mmap failed");
+        exit(1);
+    }
     internal_chains_ptr=internal_chains_head;
 }
 
@@ -91,7 +99,6 @@ void mems_finish(){
     munmap((void*)internal_chains_head,PAGE_SIZE);
     munmap((void*)internal_nodes_head,PAGE_SIZE);
     free_list_head=NULL;
-    
 }
 
 /*
