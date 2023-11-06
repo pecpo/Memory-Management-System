@@ -22,7 +22,7 @@ As PAGESIZE can differ system to system we should have flexibility to modify thi
 macro to make the output of all system same and conduct a fair evaluation. 
 */
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE 1024
 
 typedef struct Node {
     int type; // 0 for HOLE, 1 for PROCESS
@@ -362,7 +362,7 @@ Internal functions to create new nodes and chains
 
 Node* internal_node_create(){
     Node* ret;
-    if(internal_nodes_ptr+sizeof(Node)<internal_nodes_head+PAGE_SIZE){
+    if((size_t)internal_nodes_ptr+(size_t)sizeof(Node)<(size_t)internal_nodes_head+(size_t)PAGE_SIZE){
         ret=internal_nodes_ptr;
         internal_nodes_ptr++;
     }
