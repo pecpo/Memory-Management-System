@@ -195,6 +195,10 @@ void* mems_malloc(size_t size){
     newChain->offset=currentChain->offset+currentChain->size+1;
     Node* newProcessNode=internal_node_create();
     newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if(newProcessNode->start_addr==MAP_FAILED){
+        perror("Mmap failed");
+        exit(1);
+    }
     newProcessNode->end_addr=newProcessNode->start_addr+(size-1);
     newProcessNode->type=1;
     newChain->sub_chain=newProcessNode;
