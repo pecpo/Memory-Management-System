@@ -374,6 +374,10 @@ Node* internal_node_create(){
     }
     else{
         Node* new_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if(newProcessNode->start_addr==MAP_FAILED){
+            perror("Mmap failed");
+            exit(1);
+        }
         internal_nodes_ptr=new_ptr;
         internal_nodes_head=new_ptr;
         ret=internal_nodes_ptr;
