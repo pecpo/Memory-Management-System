@@ -235,7 +235,6 @@ void mems_print_stats(){
     size_t hole_memory=0;
     int pages_used=0;
     int main_length=0;
-
     for(int i=0;i<chainsCount;i++){
         printf("MAIN[%zu:%zu]->",currentChain->offset,currentChain->offset+currentChain->size);
         Node* currentNode=currentChain->sub_chain;
