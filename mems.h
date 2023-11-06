@@ -22,7 +22,7 @@ As PAGESIZE can differ system to system we should have flexibility to modify thi
 macro to make the output of all system same and conduct a fair evaluation. 
 */
 
-#define PAGE_SIZE 1024
+#define PAGE_SIZE 4096
 
 typedef struct Node {
     int type; // 0 for HOLE, 1 for PROCESS
@@ -109,7 +109,7 @@ Returns: MeMS Virtual address (that is created by MeMS)
 */ 
 
 void* mems_malloc(size_t size){
-    // Find the correct size to allocate in case of new subchain
+
     size_t allocationSize=0;
     if(size%PAGE_SIZE==0){
         allocationSize = size;
@@ -117,7 +117,7 @@ void* mems_malloc(size_t size){
     else{
         allocationSize = ((size / PAGE_SIZE) + 1) * PAGE_SIZE;
     }
-    // Traverse the free list and find a suitable segment to allocate
+    
     if(firstTime){
         Node* newProcessNode=internal_node_create();
         newProcessNode->start_addr=mmap(NULL, allocationSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -186,7 +186,6 @@ void* mems_malloc(size_t size){
         currentChain = currentChain->next;
     }
 
-    // Did not find an empty space, creating new subchain
     currentChain = free_list_head;
     while(currentChain->next!=NULL){
         currentChain=currentChain->next;
