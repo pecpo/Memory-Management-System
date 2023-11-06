@@ -374,7 +374,7 @@ Node* internal_node_create(){
     }
     else{
         Node* new_ptr=(Node*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if(newProcessNode->start_addr==MAP_FAILED){
+        if(new_ptr==MAP_FAILED){
             perror("Mmap failed");
             exit(1);
         }
@@ -394,6 +394,10 @@ Chain* internal_chain_create(){
     }
     else{
         Chain* new_ptr=(Chain*)mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        if(new_ptr==MAP_FAILED){
+            perror("Mmap failed");
+            exit(1);
+        }
         internal_chains_ptr=new_ptr;
         internal_chains_head=new_ptr;
         ret=internal_chains_ptr;
