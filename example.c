@@ -1,6 +1,5 @@
-// include other header files as needed
 #include"mems.h"
-#include<stdio.h>
+
 
 int main(int argc, char const *argv[])
 {
@@ -38,7 +37,7 @@ int main(int argc, char const *argv[])
     */
     printf("\n--------- Printing Stats [mems_print_stats] --------\n");
     mems_print_stats();
-    // exit(0);
+
     /*
     This section shows the effect of freeing up space on free list and also the effect of 
     reallocating the space that will be fullfilled by the free list.
@@ -46,7 +45,6 @@ int main(int argc, char const *argv[])
     printf("\n--------- Freeing up the memory [mems_free] --------\n");
     mems_free(ptr[3]);
     mems_print_stats();
-
     ptr[3] = (int*)mems_malloc(sizeof(int)*250);
     mems_print_stats();
 

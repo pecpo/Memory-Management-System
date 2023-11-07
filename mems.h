@@ -93,11 +93,12 @@ void mems_finish(){
         if(munmap((void*)CurrentChain->sub_chain->start_addr,(CurrentChain->size))==-1){
             printf("mems_finish failed!\n");
             perror("munmap");
+            exit(1);
         }
         CurrentChain=CurrentChain->next;
     }
-    munmap((void*)internal_chains_head,PAGE_SIZE);
-    munmap((void*)internal_nodes_head,PAGE_SIZE);
+    if(munmap((void*)internal_chains_head,PAGE_SIZE)==-1){perror("munmap");exit(1);};
+    if(munmap((void*)internal_nodes_head,PAGE_SIZE)==-1){perror("munmap");exit(1);};
     free_list_head=NULL;
 }
 
