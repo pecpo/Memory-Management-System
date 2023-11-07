@@ -171,7 +171,7 @@ void* mems_malloc(size_t size){
     for(int i=0;i<chainsCount;i++){
         Node* currentNode = currentChain->sub_chain;
         while (currentNode != NULL) {
-            if (currentNode->type == 0 && currentNode->end_addr-currentNode->start_addr+1 >=size) {
+            if (currentNode->type == 0 && currentNode->end_addr-currentNode->start_addr+1 >size) {
                 void* old_end=currentNode->end_addr;
                 currentNode->type = 1;
                 currentNode->end_addr = currentNode->start_addr + size - 1;
@@ -188,6 +188,10 @@ void* mems_malloc(size_t size){
                     newHoleNode->next=NULL;
                     return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
                 }
+            }
+            else if(currentNode->type == 0 && currentNode->end_addr-currentNode->start_addr+1 ==size){
+                currentNode->type = 1;
+                return (void*)currentChain->offset+(currentNode->start_addr-currentChain->sub_chain->start_addr);
             }
             currentNode = currentNode->next;
         }
