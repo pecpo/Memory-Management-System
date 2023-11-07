@@ -1,13 +1,10 @@
 # MeMS: Memory Management System [CSE231 OS Assignment 3]
-[Documentation](https://docs.google.com/document/d/1Gs9kC3187lLrinvK1SueTc8dHCJ0QP43eRlrCRlXiCY/edit?usp=sharing)
+[Github Repository Link](https://github.com/pecpo/os-ass-3)
 ---
 
-### How to run the example.c
-After implementing functions in mems.h follow the below steps to run example.c file
-```
-$ make
-$ ./example
-```
+## How to run the program
+
+
 ---
 ### Format of mems_mems_print_stats
 * For every Subchain in the free list print the data as follows 
